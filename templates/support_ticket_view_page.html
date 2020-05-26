@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+
+{% block stylesheets %}
+{% endblock %}
+
+{% block content %}
+	<div class="jumbotron">
+		<div class="container">
+			<h1>Support Ticket</h1>
+		</div>
+	</div>
+
+	<div class="container">
+		<div class="row">
+			<div class="col-md-12">
+				<div class="row">
+					<div class="col-md-6 offset-md-3">
+						<div id="view-ticket-div">
+							<form id="ticket_send_form" method="POST" action="/support_ticket/view">
+								<div class="form-group">
+									<textarea class="form-control" readonly rows="20">{% for message_id in ticket_conversation %}
+{{ message_id.time }}-{{ message_id.sender }}
+		{{ message_id.message }}{% endfor %}
+									</textarea>
+								</div>
+								<div class="form-group">
+									<label for="ticket-send-message">Enter Your Message</label>
+									<textarea class="form-control" name="message" id="ticket-send-message" rows="2"></textarea>
+								</div>
+								{% if "Admin" in access %}
+									<div class="form-group">
+										<label for="ticket-state" class="control-label">Change Ticket State</label>
+										<select class="form-control custom-select" id="ticket-state" name="ticket-state">
+											<option>Pending</option>
+											<option>Open</option>
+											<option>Closed</option>
+										</select>
+									</div>
+								{% endif %}
+								<input id="nonce" name='nonce' type='hidden' value="{{ nonce }}">
+								<input id="ticket" name="ticket" type="hidden" value="{{ ticket }}">
+								<div class="form-group">
+									<button class="btn btn-primary float-right" type="submit">Send</button>
+								</div>
+							</form>
+						</div>
+						<br>
+						<div id="create-ticket-entry-div">
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+{% endblock %}
+
+{% block scripts %}
+	<script type="text/javascript">
+		setTimeout("location.reload(true);", 30000);
+		var access = "{{ access }}";
+		var ticket_conversation = {
+			{% for message_info in ticket_conversation %}
+				{{ message_info.id }}:{"time":"{{ message_info.time }}", "sender":"{{ message_info.sender }}", "message":"{{ message_info.message }}"},
+			{% endfor %}
+		};
+		var ticket_info = {"category":"{{ ticket_info.category }}", "challenge":"{{ ticket_info.challenge }}", "description":"{{ ticket_info.description }}", "state":"{{ ticket_info.state }}"};
+		{% if "Admin" in access %}
+			document.getElementById("ticket-state").value = "{{ ticket_info.state }}";
+		{% endif %}
+	</script>
+{% endblock %}
+
+{% block entrypoint %}
+{% endblock %}

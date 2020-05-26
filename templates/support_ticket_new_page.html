@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+
+{% block stylesheets %}
+{% endblock %}
+
+{% block content %}
+	<div class="jumbotron">
+		<div class="container">
+			<h1>Create Support Ticket</h1>
+		</div>
+	</div>
+
+	<div class="container">
+		<div class="row">
+			<div class="col-md-12">
+				<div class="row">
+					<div class="col-md-6 offset-md-3">
+						<div id="create-ticket-select-div">
+							<label for="create-ticket-select-category" class="control-label">Choose Category</label>
+							<select class="form-control custom-select" id="create-ticket-select-category">
+								<option>--</option>
+								{% for cat in challenge_categories %}
+									<option>{{ cat.name }}</option>
+								{% endfor %}
+							</select>
+
+							<form id="ticket_create_form" method="POST" action="/support_ticket/new" enctype="multipart/form-data" style="display:none">
+								<select class="form-control custom-select" name="category" id="create-ticket-category" style="display:none">
+									{% for cat in challenge_categories %}
+										<option>{{ cat.name }}</option>
+									{% endfor %}
+								</select>
+								<div class="form-group">
+									<label for="create-ticket-select-challenge">Choose Challenge</label>
+									<select class="form-control custom-select" name="challenge" id="create-ticket-select-challenge">
+									</select>
+								</div>
+
+								<div class="form-group">
+									<label for="create-ticket-name-issue">Enter Your Issue</label>
+									<textarea class="form-control" name="issue" id="create-ticket-name-issue" rows="10"></textarea>
+								</div>
+
+								<div class="form-group">
+									<label for="create-ticket-add-file">Add a File<br>
+										<small class="form-text text-muted">Maximum size of 10Mb</small>
+										<small id="size-error-label" style="color:red; display:none">Please keep the size of the files below 10Mb</small>
+									</label>
+									<input class="form-control-file" type="file" name="file" id="create-ticket-add-file" multiple="multiple">
+								</div>
+
+								<input id="nonce" name='nonce' type='hidden' value="{{ nonce }}">
+								<div class="form-group">
+									<button class="btn btn-primary float-right" type="submit">Create</button>
+								</div>
+							</form>
+						</div>
+						<br>
+						<div id="create-ticket-entry-div">
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+{% endblock %}
+
+{% block scripts %}
+	<script type="text/javascript">
+		var challenge_categories = {
+			{% for cat in challenge_categories %}
+				"{{ cat.name }}":{
+					{% for chal in cat.challenges %}
+						{{ chal.id }}:"{{ chal.name }}",
+					{% endfor %}
+				},
+			{% endfor %}
+		};
+	</script>
+	<script src="{{ request.script_root }}/support_ticket/static/support_ticket_new.js"></script>
+{% endblock %}
+
+{% block entrypoint %}
+	{% if admin or not errors %}
+	{% endif %}
+{% endblock %}
