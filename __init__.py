@@ -1,20 +1,12 @@
-from flask import session, json, Blueprint, request, redirect, Response, url_for, jsonify, abort, render_template
-from sqlalchemy.sql import and_
 from datetime import datetime
 
-from CTFd.plugins import register_user_page_menu_bar
-from CTFd.plugins.flags import get_flag_class
-from CTFd.models import Challenges, db, Solves, Users
-from CTFd.utils.modes import get_model
-from CTFd.utils.uploads import delete_file
-from CTFd.utils.user import get_ip, get_current_user, get_current_team, is_admin, authed
-from CTFd.utils import scores
-from CTFd.utils import config, get_config
-from CTFd.utils.dates import ctf_ended, ctf_paused, view_after_ctf
-from CTFd.utils.decorators import during_ctf_time_only, require_verified_emails, admins_only
-from CTFd.utils.decorators.visibility import check_challenge_visibility
-from CTFd.utils.helpers import get_errors, get_infos
+from flask import Blueprint, request, redirect, abort, render_template
+from sqlalchemy.sql import and_
 
+from CTFd.models import Challenges, db, Solves, Users
+from CTFd.plugins import register_user_page_menu_bar
+from CTFd.utils import config
+from CTFd.utils.user import get_current_user, get_current_team, is_admin
 
 support_ticket = Blueprint("support_ticket", __name__, template_folder='templates')
 support_ticket_static = Blueprint("support_ticket_static", __name__, static_folder='static')
