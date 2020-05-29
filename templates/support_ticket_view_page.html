@@ -18,15 +18,17 @@
 						<div id="view-ticket-div">
 							<form id="ticket_send_form" method="POST" action="/support_ticket/view">
 								<div class="form-group">
-									<textarea class="form-control" readonly rows="20">{% for message_id in ticket_conversation %}
-{{ message_id.time }}-{{ message_id.sender }}
-		{{ message_id.message }}{% endfor %}
-									</textarea>
+									<div class="form-control" style="border-style:solid; color:black; height:600px !important">
+										{% for message_id in ticket_conversation %}
+											<span><b>{{ message_id.time }}-{{ message_id.sender }}</b></span><br>
+											<small>{{ message_id.message }}</small><br><br>
+										{% endfor %}
+									</div>
 								</div>
-								<div class="form-group">
-									<label for="ticket-send-message">Enter Your Message</label>
-									<textarea class="form-control" name="message" id="ticket-send-message" rows="2"></textarea>
-								</div>
+									<div class="form-group" {% if "Closed" in ticket_info.state %} style="display:none" {% endif %}>
+										<label for="ticket-send-message">Enter Your Message</label>
+										<textarea class="form-control" name="message" id="ticket-send-message" rows="2"></textarea>
+									</div>
 								{% if "Admin" in access %}
 									<div class="form-group">
 										<label for="ticket-state" class="control-label">Change Ticket State</label>

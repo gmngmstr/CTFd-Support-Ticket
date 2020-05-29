@@ -18,7 +18,7 @@
 										</label>
 									</div>
 									<div class="col-md-6">
-										<label {% if "Pending" in ticket_info.state %} style="background:orange; color:white" {% elif "Open" in ticket_info.state %} style="background:blue; color:white" {% elif "Closed" in ticket_info.state %} style="background:red; color:white" {% endif %}>
+										<label {% if "Pending" in ticket_info.state %} style="background:orange; color:white" {% elif "Open" in ticket_info.state %} style="background:green; color:white" {% elif "Closed" in ticket_info.state %} style="background:red; color:white" {% endif %}>
 											{{ ticket_info.state }}
 										</label>
 									</div>
