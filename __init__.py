@@ -1,12 +1,21 @@
+from flask import session, json, Blueprint, request, redirect, Response, url_for, jsonify, abort, render_template
+from sqlalchemy.sql import and_
 from datetime import datetime
 
-from flask import Blueprint, request, redirect, abort, render_template
-from sqlalchemy.sql import and_
-
-from CTFd.models import Challenges, db, Solves, Users
+from CTFd.admin import admin
 from CTFd.plugins import register_user_page_menu_bar
-from CTFd.utils import config
-from CTFd.utils.user import get_current_user, get_current_team, is_admin
+from CTFd.plugins.flags import get_flag_class
+from CTFd.models import Challenges, db, Solves, Users
+from CTFd.utils.modes import get_model
+from CTFd.utils.uploads import delete_file
+from CTFd.utils.user import get_ip, get_current_user, get_current_team, is_admin, authed
+from CTFd.utils import scores
+from CTFd.utils import config, get_config
+from CTFd.utils.dates import ctf_ended, ctf_paused, view_after_ctf
+from CTFd.utils.decorators import during_ctf_time_only, require_verified_emails, admins_only, require_team
+from CTFd.utils.decorators.visibility import check_challenge_visibility
+from CTFd.utils.helpers import get_errors, get_infos
+
 
 support_ticket = Blueprint("support_ticket", __name__, template_folder='templates')
 support_ticket_static = Blueprint("support_ticket_static", __name__, static_folder='static')
@@ -110,6 +119,10 @@ def load(app):
             return user
 
     @app.route('/support_ticket', methods=['GET', 'POST'])
+    @during_ctf_time_only
+    @require_verified_emails
+    @check_challenge_visibility
+    @require_team
     def user_tickets():
         if is_admin():
             return render_template('support_ticket_page.html', ticket_list=get_ticket_for_admin(), access="Admin")
@@ -165,6 +178,21 @@ def load(app):
         else:
             return render_template('support_ticket_view_page.html', ticket_info=ticket_info, ticket_conversation=ticket_conversation, ticket=ticket_id, access="User")
 
+    @app.route('/admin/plugins/support-ticket', methods=['GET'])
+    @admins_only
+    def admin_ticket_management():
+        return render_template('support_ticket_admin_view.html', ticket_list=get_ticket_for_admin())
+
+    @app.route('/admin/plugins/support-ticket/<int:ticket_id>')
+    @admins_only
+    def ticket_management(ticket_id):
+        ticket = SupportTickets.query.filter_by(id=ticket_id)
+        ticket_info = {}
+        for t in ticket:
+            ticket_info.update({"creator": t.user, "category": t.challenge_cat, "challenge": t.challenge_name, "description": t.description, "state": t.state})
+
+        return render_template('support_ticket_admin_edit.html', ticket_info=ticket_info)
+
 
 class SupportTickets(db.Model):
     __mapper_args__ = {"polymorphic_identity": "support_tickets"}
@@ -190,7 +218,7 @@ class SupportTicketConversation(db.Model):
     ticket_id = db.Column(db.Integer, db.ForeignKey('support_tickets.id'))
     sender = db.Column(db.String(80), nullable=False)
     time_sent = db.Column(db.String(80), nullable=False)
-    message = db.Column(db.String)
+    message = db.Column(db.Text)
 
     def __init__(self, ticket_id, sender, time_sent, message):
         self.ticket_id = ticket_id

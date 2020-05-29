@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+
+{% block stylesheets %}
+{% endblock %}
+
+{% block content %}
+	<div class="container">
+		<div class="row">
+			<div class="col-md-12">
+				<form id="ticket-edit">
+					<div class="form-group">
+						<div class="row mh-100">
+							<div class="col-md-6">
+								<div class="row mh-100">
+									<div class="col-md-6">
+										<label>
+											<b>Creator:</b> {{ ticket_info.creator }}
+										</label>
+									</div>
+									<div class="col-md-6">
+										<label {% if "Pending" in ticket_info.state %} style="background:orange; color:white" {% elif "Open" in ticket_info.state %} style="background:blue; color:white" {% elif "Closed" in ticket_info.state %} style="background:red; color:white" {% endif %}>
+											{{ ticket_info.state }}
+										</label>
+									</div>
+
+									<div class="col-md-6">
+										<label>
+											<b>Challenge Category:</b> {{ ticket_info.category }}
+										</label>
+									</div>
+									<div class="col-md-6">
+										<label>
+											<b>Challenge Name:</b> {{ ticket_info.challenge }}
+										</label>
+									</div>
+
+									<div class="col-md-12">
+										<label>
+											<b>Description:</b> {{ ticket_info.description }}
+										</label>
+									</div>
+								</div>
+							</div>
+							<div class="col-md-6">
+								<label>
+									<b>Files:</b>
+								</label>
+								<table class="table table-striped">
+									<thead>
+										<tr>
+											<td width="10px">
+												<b>ID</b>
+											</td>
+											<td class="text-center">
+												<b>Name</b>
+											</td>
+											<td class="text-center">
+												<b>Size</b>
+											</td>
+											<td class="text-center" width="10px">
+												<b>Settings</b>
+											</td>
+										</tr>
+									</thead>
+									<tbody>
+									</tbody>
+								</table>
+							</div>
+						</div>
+					</div>
+				</form>
+			</div>
+		</div>
+	</div>
+
+{% endblock %}
+
+{% block scripts %}
+	<script type="text/javascript">
+
+	</script>
+{% endblock %}
+
+{% block entrypoint %}
+{% endblock %}

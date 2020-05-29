@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+
+{% block stylesheets %}
+{% endblock %}
+
+{% block content %}
+	<div class="jumbotron">
+		<div class="container">
+			<h1>Support Ticket</h1>
+		</div>
+	</div>
+
+	<div class="container">
+		<div class="row">
+			<div class="col-md-12">
+				<table class="table table-striped">
+					<thead>
+						<tr>
+							<td class="text-center" width="10px">
+								<b>ID</b>
+							</td>
+							<td class="text-center">
+								<b>User Name</b>
+							</td>
+							<td class="text-center">
+								<b>Category</b>
+							</td>
+							<td class="text-center">
+								<b>Challenge</b>
+							</td>
+							<td class="text-center">
+								<b>State</b>
+							</td>
+							<td class="text-center">
+								<b>Settings</b>
+							</td>
+						</tr>
+					</thead>
+					<tbody>
+						{% for ticket in ticket_list %}
+							<tr>
+								<td>
+									{{ ticket.id }}
+								</td>
+								<td class="text-center">
+									{{ ticket.creator }}
+								</td>
+								<td class="text-center">
+									{{ ticket.challenge_cat }}
+								</td>
+								<td class="text-center">
+									{{ ticket.challenge_name }}
+								</td>
+								<td class="text-center">
+									{{ ticket.state }}
+								</td>
+								<td class="text-center">
+									<span class="edit-page" data-toggle="tooltip" data-placement="top" title="Edit Ticket">
+										<a class="no-decoration" href="{{ url_for('ticket_management', ticket_id=ticket.id) }}"><i class="btn-fa fas fa-edit"></i></a>
+									</span>
+									<span class="delete-page" ticket-id="{{ ticket.id }}" data-toggle="tooltip" data-placement="top" title="Delete Ticket">
+										<i class="btn-fa fas fa-times"></i>
+									</span>
+								</td>
+							</tr>
+						{% endfor %}
+					</tbody>
+				</table>
+			</div>
+		</div>
+	</div>
+
+{% endblock %}
+
+{% block scripts %}
+	<script type="text/javascript">
+
+	</script>
+{% endblock %}
+
+{% block entrypoint %}
+{% endblock %}
