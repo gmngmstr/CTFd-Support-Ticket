@@ -18,7 +18,7 @@
 						<div id="view-ticket-div">
 							<form id="ticket_send_form" method="POST" action="/support_ticket/view">
 								<div class="form-group">
-									<div class="form-control" style="border-style:solid; color:black; height:600px !important">
+									<div class="form-control" style="border-style:solid; color:black; height:600px !important; overflow-y:auto">
 										{% for message_id in ticket_conversation %}
 											<span><b>{{ message_id.time }}-{{ message_id.sender }}</b></span><br>
 											<small>{{ message_id.message }}</small><br><br>
