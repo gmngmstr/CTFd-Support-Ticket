@@ -24,7 +24,7 @@
 								{% endfor %}
 							</select>
 
-							<form id="ticket_create_form" method="POST" action="/support_ticket/new" enctype="multipart/form-data" style="display:none">
+							<form id="ticket-create-form" method="POST" action="/support-ticket/new" enctype="multipart/form-data" style="display:none">
 								<select class="form-control custom-select" name="category" id="create-ticket-category" style="display:none">
 									{% for cat in challenge_categories %}
 										<option>{{ cat.name }}</option>
@@ -32,31 +32,31 @@
 								</select>
 								<div class="form-group">
 									<label for="create-ticket-select-challenge">Choose Challenge</label>
+									<small id="create-ticket-select-challenge-error" style="color:red; display:none">Please select a Challenge</small>
 									<select class="form-control custom-select" name="challenge" id="create-ticket-select-challenge">
 									</select>
 								</div>
 
 								<div class="form-group">
 									<label for="create-ticket-name-issue">Enter Your Issue</label>
+									<small id="create-ticket-name-issue-error" style="color:red; display:none">Please input a description</small>
 									<textarea class="form-control" name="issue" id="create-ticket-name-issue" rows="10"></textarea>
 								</div>
 
 								<div class="form-group">
 									<label for="create-ticket-add-file">Add a File<br>
-										<small class="form-text text-muted">Maximum size of 10Mb</small>
+										<small class="form-text text-muted">Attach multiple files using Control+Click or Cmd+Click</small>
 										<small id="size-error-label" style="color:red; display:none">Please keep the size of the files below 10Mb</small>
 									</label>
 									<input class="form-control-file" type="file" name="file" id="create-ticket-add-file" multiple="multiple">
+										<sub class="form-text text-muted">Maximum size of 10Mb</sub>
 								</div>
 
 								<input id="nonce" name='nonce' type='hidden' value="{{ nonce }}">
-								<div class="form-group">
-									<button class="btn btn-primary float-right" type="submit">Create</button>
-								</div>
 							</form>
-						</div>
-						<br>
-						<div id="create-ticket-entry-div">
+							<div>
+								<button class="btn btn-primary float-right" id="submit-ticket" style="display:none">Create</button>
+							</div>
 						</div>
 					</div>
 				</div>
@@ -66,8 +66,12 @@
 
 {% endblock %}
 
+{% block entrypoint %}
+
+{% endblock %}
+
 {% block scripts %}
-	<script type="text/javascript">
+	<script>
 		var challenge_categories = {
 			{% for cat in challenge_categories %}
 				"{{ cat.name }}":{
@@ -77,11 +81,8 @@
 				},
 			{% endfor %}
 		};
+		var TICKET_ID = {{ ticket_id }}
 	</script>
-	<script src="{{ request.script_root }}/support_ticket/static/support_ticket_new.js"></script>
+	<script src="{{ request.script_root }}/support-ticket/static/support_ticket_new.js"></script>
 {% endblock %}
 
-{% block entrypoint %}
-	{% if admin or not errors %}
-	{% endif %}
-{% endblock %}

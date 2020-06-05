@@ -69,6 +69,27 @@
 										</tr>
 									</thead>
 									<tbody>
+										{% for file_info in file_list %}
+											<tr>
+												<td width="10px">
+													{{ file_info.id }}
+												</td>
+												<td class="text-center">
+													{{ file_info.filename }}
+												</td>
+												<td class="text-center">
+													{{ file_info.size }}
+												</td>
+												<td class="text-center" width="10px">
+													<span data-toggle="tooltip" data-placement="top" title="Download File">
+														<a href="{{ url_for('download_file', file_id=file_info.id) }}"><i class="btn-fa fas fa-download"></i></a>
+													</span>
+													<span data-toggle="tooltip" data-placement="top" title="Delete File">
+														<a href="{{ url_for('delete_file', file_id=file_info.id) }}"><i class="btn-fa fas fa-times"></i></a>
+													</span>
+												</td>
+											</tr>
+										{% endfor %}
 									</tbody>
 								</table>
 							</div>

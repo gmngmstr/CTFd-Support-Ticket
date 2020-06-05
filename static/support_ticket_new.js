@@ -24,34 +24,6 @@ function start(){
         addChallenge(category_name, show_error=false);
     }
 
-
-    function showFileSize() {
-        var input, file;
-
-        // (Can't use `typeof FileReader === "function"` because apparently
-        // it comes back as "object" on some browsers. So just see if it's there
-        // at all.)
-        if (!window.FileReader) {
-            bodyAppend("p", "The file API isn't supported on this browser yet.");
-            return;
-        }
-
-        input = document.getElementById('create-ticket-add-file');
-        if (!input) {
-            bodyAppend("p", "Um, couldn't find the create-ticket-add-file element.");
-        }
-        else if (!input.files) {
-            bodyAppend("p", "This browser doesn't seem to support the `files` property of file inputs.");
-        }
-        else if (!input.files[0]) {
-            bodyAppend("p", "Please select a file before clicking 'Load'");
-        }
-        else {
-            file = input.files[0];
-            return file.size;
-        }
-    }
-
     function bodyAppend(tagName, innerHTML) {
         var elm;
 
@@ -60,28 +32,66 @@ function start(){
         document.body.appendChild(elm);
     }
 
-
     document.getElementById("create-ticket-select-category").value = "--";
     document.getElementById("create-ticket-select-category").onchange=function() {
         if (this.value === "--") {
-            document.getElementById("ticket_create_form").style.display = 'none';
+            document.getElementById("ticket-create-form").style.display = 'none';
+            document.getElementById("submit-ticket").style.display = 'none';
             return;
         }
         resetChallengeList(this.value);
-        document.getElementById("ticket_create_form").style.display = 'block';
+        document.getElementById("ticket-create-form").style.display = 'block';
+        document.getElementById("submit-ticket").style.display = 'block';
         document.getElementById("create-ticket-category").value = this.value;
     };
 
-    document.getElementById("create-ticket-name-issue").value = "";
+    document.getElementById("create-ticket-select-challenge").onchange=function() {
+        if (this.value === "--") {
+            document.getElementById("create-ticket-select-challenge-error").style.display = 'block';
+            return;
+        }
+        document.getElementById("create-ticket-select-challenge-error").style.display = 'none';
+    };
 
-    document.getElementById("create-ticket-add-file").value = "";
+    document.getElementById("create-ticket-name-issue").value = "";
+    document.getElementById("create-ticket-name-issue").onchange=function() {
+        if (this.value === "") {
+            document.getElementById("create-ticket-name-issue-error").style.display = 'block';
+            return;
+        }
+        document.getElementById("create-ticket-name-issue-error").style.display = 'none';
+    };
+
+    document.getElementById("create-ticket-add-file").value = null;
     document.getElementById("create-ticket-add-file").onchange=function() {
-        file_size=showFileSize();
-        if (file_size > 10000000) {
-            document.getElementById("size-error-label").style.display = 'block';
+        input = document.getElementById('create-ticket-add-file');
+        for (i = 0; i <= input.files.length-1; i++) {
+            file = input.files[i];
+            file_size=file.size;
+            if (file_size > 10000000) {
+                document.getElementById("size-error-label").style.display = 'block';
+                return
+            }
+            else {
+                document.getElementById("size-error-label").style.display = 'none';
+            }
+        }
+    };
+
+    document.getElementById("submit-ticket").onclick=function() {
+        if (document.getElementById("create-ticket-select-challenge").value === "--") {
+            document.getElementById("create-ticket-select-challenge-error").style.display = 'block';
+            return;
+        }
+        else if (document.getElementById("create-ticket-name-issue").value === "") {
+            document.getElementById("create-ticket-name-issue-error").style.display = 'block';
+            return;
+        }
+        else if (document.getElementById("size-error-label").style.display === 'block') {
+            return;
         }
         else {
-            document.getElementById("size-error-label").style.display = 'none';
+            document.getElementById("ticket-create-form").submit();
         }
     };
 };

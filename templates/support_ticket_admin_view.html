@@ -55,10 +55,10 @@
 									{{ ticket.state }}
 								</td>
 								<td class="text-center">
-									<span class="edit-page" data-toggle="tooltip" data-placement="top" title="Edit Ticket">
+									<span data-toggle="tooltip" data-placement="top" title="Edit Ticket">
 										<a class="no-decoration" href="{{ url_for('ticket_management', ticket_id=ticket.id) }}"><i class="btn-fa fas fa-edit"></i></a>
 									</span>
-									<span class="delete-page" ticket-id="{{ ticket.id }}" data-toggle="tooltip" data-placement="top" title="Delete Ticket">
+									<span ticket-id="{{ ticket.id }}" data-toggle="tooltip" data-placement="top" title="Delete Ticket">
 										<i class="btn-fa fas fa-times"></i>
 									</span>
 								</td>

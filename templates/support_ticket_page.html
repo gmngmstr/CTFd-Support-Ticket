@@ -46,27 +46,66 @@
 	{% if admin or not errors %}
 		<div class="container">
 			<div id='ticket-board'>
-				<form id="Pending-board" style="display:none" method="GET" action="/support_ticket/view">
+				<div id="Pending-board" style="display:none">
 					<div class="category-header col-md-12 mb-3">
 						<h3>Pending</h3>
 					</div>
 					<div id="Pending-tickets" class="category-challenges col-md-12">
+						{% for ticket in ticket_list %}
+							{% if "Pending" in ticket.state %}
+								<div class="col-md-3 d-inline-block">
+									<button class="btn btn-dark challenge-button w-100 text-truncate pt-3 pb-3 mb-2" onclick="location.href='{{ url_for('view_ticket', ticket_id=ticket.id) }}'" type="button">
+										{% if "Admin" in access %}
+											<p>Creator: {{ ticket.creator }}</p>
+										{% endif %}
+										<p>Category: {{ ticket_list.challenge_cat }}</p>
+										<span>Challenge: {{ ticket.challenge_name }}</span>
+									</button>
+								</div>
+							{% endif %}
+						{% endfor %}
 					</div>
-				</form>
-				<form id="Open-board" style="display:none" method="GET" action="/support_ticket/view">
+				</div>
+				<div id="Open-board" style="display:none">
 					<div class="category-header col-md-12 mb-3">
 						<h3>Open</h3>
 					</div>
 					<div id="Open-tickets" class="category-challenges col-md-12">
+						{% for ticket in ticket_list %}
+							{% if "Open" in ticket.state %}
+								<div class="col-md-3 d-inline-block">
+									<button class="btn btn-dark challenge-button w-100 text-truncate pt-3 pb-3 mb-2" onclick="location.href='{{ url_for('view_ticket', ticket_id=ticket.id) }}'" type="button">
+										{% if "Admin" in access %}
+											<p>Creator: {{ ticket.creator }}</p>
+										{% endif %}
+										<p>Category: {{ ticket_list.challenge_cat }}</p>
+										<span>Challenge: {{ ticket.challenge_name }}</span>
+									</button>
+								</div>
+							{% endif %}
+						{% endfor %}
 					</div>
-				</form>
-				<form id="Closed-board" style="display:none" method="GET" action="/support_ticket/view">
+				</div>
+				<div id="Closed-board" style="display:none">
 					<div class="category-header col-md-12 mb-3">
 						<h3>Closed</h3>
 					</div>
 					<div id="Closed-tickets" class="category-challenges col-md-12">
+						{% for ticket in ticket_list %}
+							{% if "Closed" in ticket.state %}
+								<div class="col-md-3 d-inline-block">
+									<button class="btn btn-dark challenge-button w-100 text-truncate pt-3 pb-3 mb-2" onclick="location.href='{{ url_for('view_ticket', ticket_id=ticket.id) }}'" type="button">
+										{% if "Admin" in access %}
+											<p>Creator: {{ ticket.creator }}</p>
+										{% endif %}
+										<p>Category: {{ ticket_list.challenge_cat }}</p>
+										<span>Challenge: {{ ticket.challenge_name }}</span>
+									</button>
+								</div>
+							{% endif %}
+						{% endfor %}
 					</div>
-				</form>
+				</div>
 			</div>
 		</div>
 
@@ -78,27 +117,6 @@
 	<script type="text/javascript">
 		setTimeout("location.reload(true);", 60000);
 		var access = "{{ access }}";
-		var ticket_list = {
-			"Pending":{
-				{% for ticket in ticket_list %}
-					{% if "Pending" == ticket.state %}
-						{{ ticket.id }}:{"category":"{{ ticket.challenge_cat }}", "name":"{{ ticket.challenge_name }}"{% if "Admin" in access %}, "user":"{{ ticket.creator }}"{% endif %} },
-					{% endif %}
-				{% endfor %}
-			}, "Open":{
-				{% for ticket in ticket_list %}
-					{% if "Open" == ticket.state %}
-						{{ ticket.id }}:{"category":"{{ ticket.challenge_cat }}", "name":"{{ ticket.challenge_name }}"{% if "Admin" in access %}, "user":"{{ ticket.creator }}"{% endif %} },
-					{% endif %}
-				{% endfor %}
-			}, "Closed":{
-				{% for ticket in ticket_list %}
-					{% if "Closed" == ticket.state %}
-						{{ ticket.id }}:{"category":"{{ ticket.challenge_cat }}", "name":"{{ ticket.challenge_name }}"{% if "Admin" in access %}, "user":"{{ ticket.creator }}"{% endif %} },
-					{% endif %}
-				{% endfor %}
-			}
-		};
 	</script>
-	<script src="{{ request.script_root }}/support_ticket/static/support_tickets.js"></script>
+	<script src="{{ request.script_root }}/support-ticket/static/support_tickets.js"></script>
 {% endblock %}

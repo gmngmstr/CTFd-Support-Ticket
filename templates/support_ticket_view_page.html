@@ -16,19 +16,38 @@
 				<div class="row">
 					<div class="col-md-6 offset-md-3">
 						<div id="view-ticket-div">
-							<form id="ticket_send_form" method="POST" action="/support_ticket/view">
+							<form id="ticket_send_form" method="POST" action="{{ url_for('view_ticket', ticket_id=ticket) }}" enctype="multipart/form-data">
 								<div class="form-group">
 									<div class="form-control" style="border-style:solid; color:black; height:600px !important; overflow-y:auto">
 										{% for message_id in ticket_conversation %}
-											<span><b>{{ message_id.time }}-{{ message_id.sender }}</b></span><br>
-											<small>{{ message_id.message }}</small><br><br>
+											<div id="{{ message_id.id }}">
+												<span><b>{{ message_id.time }}-{{ message_id.sender }}</b></span><br>
+												<small>{{ message_id.message }}</small><br>
+												<details>
+													<summary>{{ message_id.files|length }} files uploaded</summary>
+													<ul>
+														{% for file in message_id.files %}
+															<li>{% for name in file %}<a href="{{ url_for('download_file', file_id=name) }}">{{ file[name] }}</a>{% endfor %}</li>
+														{% endfor %}
+													</ul>
+												</details>
+											</div>
 										{% endfor %}
 									</div>
 								</div>
-									<div class="form-group" {% if "Closed" in ticket_info.state %} style="display:none" {% endif %}>
-										<label for="ticket-send-message">Enter Your Message</label>
-										<textarea class="form-control" name="message" id="ticket-send-message" rows="2"></textarea>
-									</div>
+								<div class="form-group" {% if "Closed" in ticket_info.state %} style="display:none" {% endif %}>
+									<label for="ticket-send-message">Enter Your Message</label>
+									<textarea class="form-control" name="message" id="ticket-send-message" rows="2"></textarea>
+								</div>
+
+								<div class="form-group" {% if "Closed" in ticket_info.state %} style="display:none" {% endif %}>
+									<label for="ticket-add-file">Add a File<br>
+										<small class="form-text text-muted">Attach multiple files using Control+Click or Cmd+Click</small>
+										<small id="size-error-label" style="color:red; display:none">Please keep the size of the files below 10Mb</small>
+									</label>
+									<input class="form-control-file" type="file" name="file" id="ticket-add-file" multiple="multiple">
+										<sub class="form-text text-muted">Maximum size of 10Mb</sub>
+								</div>
 								{% if "Admin" in access %}
 									<div class="form-group">
 										<label for="ticket-state" class="control-label">Change Ticket State</label>
@@ -39,12 +58,23 @@
 										</select>
 									</div>
 								{% endif %}
+								{% if "User" in access and "Pending" not in ticket_info.state %}
+									<div class="form-group">
+										<label for="ticket-state" class="control-label">Change Ticket State</label>
+										<select class="form-control custom-select" id="ticket-state" name="ticket-state">
+											<option>Open</option>
+											<option>Closed</option>
+										</select>
+									</div>
+								{% endif %}
+								{% if "User" in access and "Pending" in ticket_info.state %}
+									<input name='ticket-state' type='hidden' value="Pending">
+								{% endif %}
 								<input id="nonce" name='nonce' type='hidden' value="{{ nonce }}">
-								<input id="ticket" name="ticket" type="hidden" value="{{ ticket }}">
-								<div class="form-group">
-									<button class="btn btn-primary float-right" type="submit">Send</button>
-								</div>
 							</form>
+							<div>
+								<button class="btn btn-primary float-right" id="submit-ticket">Send</button>
+							</div>
 						</div>
 						<br>
 						<div id="create-ticket-entry-div">
@@ -63,14 +93,18 @@
 		var access = "{{ access }}";
 		var ticket_conversation = {
 			{% for message_info in ticket_conversation %}
-				{{ message_info.id }}:{"time":"{{ message_info.time }}", "sender":"{{ message_info.sender }}", "message":"{{ message_info.message }}"},
+				{{ message_info.id }}:{"time":"{{ message_info.time }}", "sender":"{{ message_info.sender }}", "message":"{{ message_info.message }}", "files":[
+					{% for path in message_info.files %}
+						"{{ path }}",
+					{% endfor %}]},
 			{% endfor %}
 		};
 		var ticket_info = {"category":"{{ ticket_info.category }}", "challenge":"{{ ticket_info.challenge }}", "description":"{{ ticket_info.description }}", "state":"{{ ticket_info.state }}"};
-		{% if "Admin" in access %}
+		{% if "Admin" in access or "Pending" not in ticket_info.state %}
 			document.getElementById("ticket-state").value = "{{ ticket_info.state }}";
 		{% endif %}
 	</script>
+
 {% endblock %}
 
 {% block entrypoint %}
