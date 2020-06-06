@@ -56,10 +56,10 @@
 								</td>
 								<td class="text-center">
 									<span data-toggle="tooltip" data-placement="top" title="Edit Ticket">
-										<a class="no-decoration" href="{{ url_for('ticket_management', ticket_id=ticket.id) }}"><i class="btn-fa fas fa-edit"></i></a>
+										<a href="{{ url_for('ticket_management', ticket_id=ticket.id) }}"><i class="btn-fa fas fa-edit"></i></a>
 									</span>
-									<span ticket-id="{{ ticket.id }}" data-toggle="tooltip" data-placement="top" title="Delete Ticket">
-										<i class="btn-fa fas fa-times"></i>
+									<span data-toggle="tooltip" data-placement="top" title="Delete Ticket">
+										<a href="{{ url_for('delete_ticket', ticket_id=ticket.id) }}"><i class="btn-fa fas fa-times"></i></a>
 									</span>
 								</td>
 							</tr>

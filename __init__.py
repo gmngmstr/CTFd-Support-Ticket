@@ -127,20 +127,17 @@ def load(app):
             user = user + " (User)"
             return user
 
-    def upload_file(ticket, user, files):
-        if not os.path.exists(ticket_upload + str(ticket.id)):
-            os.mkdir(ticket_upload + str(ticket.id))
+    def upload_file(ticket_id, message_id, user, files):
+        if not os.path.exists(ticket_upload + str(ticket_id)):
+            os.mkdir(ticket_upload + str(ticket_id))
         time = datetime.now().time().strftime("%H:%M")
-        file_list = []
         for file in files:
             filename = secure_filename(file.filename)
-            file.save(ticket_upload + str(ticket.id) + '/' + filename)
-            size = os.stat((ticket_upload + str(ticket.id) + '/' + filename)).st_size
-            uploaded_file = SupportTicketFiles(ticket_id=ticket.id, sender=user.name, time_sent=time, path=(ticket_upload + str(ticket.id) + '/' + filename), filename=filename, size=size)
+            file.save(ticket_upload + str(ticket_id) + '/' + filename)
+            size = os.stat((ticket_upload + str(ticket_id) + '/' + filename)).st_size
+            uploaded_file = SupportTicketFiles(ticket_id=ticket_id, message_id=message_id, sender=user.name, time_sent=time, path=(ticket_upload + str(ticket_id) + '/' + filename), filename=filename, size=size)
             db.session.add(uploaded_file)
             db.session.commit()
-            file_list.append(uploaded_file.id)
-        return file_list
 
     @app.route('/support-ticket', methods=['GET', 'POST'])
     @during_ctf_time_only
@@ -164,17 +161,13 @@ def load(app):
             ticket = SupportTickets(user=user.name, user_id=user.account_id, challenge_cat=category, challenge_name=challenge, description=issue)
             db.session.add(ticket)
             db.session.commit()
-            file_id_list = ""
-            if files[0]:
-                files = request.files.getlist('file')
-                file_list = upload_file(ticket, user, files)
-                for id in file_list:
-                    file_id_list += str(id) + ','
-                print(file_id_list)
             time = datetime.now().time().strftime("%H:%M")
-            initial_message = SupportTicketConversation(ticket_id=ticket.id, sender=user.name, time_sent=time, message=issue, files=file_id_list)
+            initial_message = SupportTicketConversation(ticket_id=ticket.id, sender=user.name, time_sent=time, message=issue)
             db.session.add(initial_message)
             db.session.commit()
+            if files[0]:
+                files = request.files.getlist('file')
+                upload_file(ticket.id, initial_message.id, user, files)
             return redirect('/support-ticket')
         ticket = SupportTickets.query.all()
         ids = []
@@ -194,37 +187,31 @@ def load(app):
             time = datetime.now().time().strftime("%H:%M")
             user = get_current_user()
             files = request.files.getlist('file')
-            file_id_list = ""
-            if files[0]:
-                files = request.files.getlist('file')
-                file_list = upload_file(ticket_id, user, files)
-                for id in file_list:
-                    file_id_list += str(id) + ','
-            if message.replace(' ', '').replace('\n', '') != "":
-                ticket_message = SupportTicketConversation(ticket_id=ticket_id, sender=user.name, time_sent=time, message=message, files=file_id_list)
+            if message.replace(' ', '').replace('\n', '') != "" or files[0]:
+                ticket_message = SupportTicketConversation(ticket_id=ticket_id, sender=user.name, time_sent=time, message=message)
                 db.session.add(ticket_message)
                 db.session.commit()
-            ticket = (SupportTickets.query.filter(SupportTickets.id == ticket_id))
+            if files[0]:
+                files = request.files.getlist('file')
+                upload_file(ticket_id, ticket_message.id, user, files)
+            ticket = SupportTickets.query.filter_by(id=ticket_id)
             for t in ticket:
                 if request.form['ticket-state'] != t.state:
                     t.state = request.form['ticket-state']
                     db.session.commit()
             return redirect(url_for("view_ticket", ticket_id=ticket_id))
-        ticket = (SupportTickets.query.filter(SupportTickets.id == ticket_id)).first_or_404()
-        ticket_message = (SupportTicketConversation.query.filter(SupportTicketConversation.ticket_id == ticket_id))
+
+        ticket = SupportTickets.query.filter_by(id=ticket_id).first_or_404()
+        ticket_message = SupportTicketConversation.query.filter_by(ticket_id=ticket_id)
         ticket_info = {}
         ticket_conversation = []
-        path_list = []
         ticket_info.update({"category": ticket.challenge_cat, "challenge": ticket.challenge_name, "description": ticket.description, "state": ticket.state})
         for message_info in ticket_message:
-            if message_info.files != "":
-                file_id = message_info.files.split(',')
-                file_id.pop()
-                for file in file_id:
-                    print(file)
-                    file_list = SupportTicketFiles.query.filter(SupportTicketFiles.id == file).first_or_404()
-                    path_list.append({file_list.id: file_list.filename})
-            ticket_conversation.append({"id": message_info.id, "sender": get_user_access(message_info.sender), "time": message_info.time_sent, "message": message_info.message, "files": path_list})
+            message_files = SupportTicketFiles.query.filter_by(message_id=message_info.id).all()
+            file_list = []
+            for file in message_files:
+                file_list.append({file.id: file.filename})
+            ticket_conversation.append({"id": message_info.id, "sender": get_user_access(message_info.sender), "time": message_info.time_sent, "message": message_info.message, "files": file_list})
         if is_admin():
             return render_template('support_ticket_view_page.html', ticket_info=ticket_info, ticket_conversation=ticket_conversation, ticket=ticket_id, access="Admin")
         else:
@@ -237,7 +224,7 @@ def load(app):
 
     @app.route('/support-ticket/delete-file/<int:file_id>')
     def delete_file(file_id):
-        file = SupportTicketFiles.query.filter(SupportTicketFiles.id == file_id)
+        file = SupportTicketFiles.query.filter_by(id=file_id)
         ticket_id = file[0].ticket_id
         os.remove(file[0].path)
         file.delete()
@@ -254,8 +241,8 @@ def load(app):
     def ticket_management(ticket_id):
         ticket = SupportTickets.query.filter_by(id=ticket_id).first_or_404()
         ticket_info = {}
-        ticket_info.update({"creator": ticket.user, "category": ticket.challenge_cat, "challenge": ticket.challenge_name, "description": ticket.description, "state": ticket.state})
-        file_info = SupportTicketFiles.query.filter(SupportTicketFiles.ticket_id == ticket_id)
+        ticket_info.update({"id": ticket_id, "creator": ticket.user, "category": ticket.challenge_cat, "challenge": ticket.challenge_name, "description": ticket.description, "state": ticket.state})
+        file_info = SupportTicketFiles.query.filter_by(ticket_id=ticket_id)
         file_list = []
         for file in file_info:
             if int(file.size) >= 1000000:
@@ -267,6 +254,18 @@ def load(app):
             file_list.append({"id": file.id, "filename": file.filename, "size": size})
         print(file_list)
         return render_template('support_ticket_admin_edit.html', ticket_info=ticket_info, file_list=file_list)
+
+    @app.route('/admin/plugins/support-ticket/delete/<int:ticket_id>', methods=['GET'])
+    @admins_only
+    def delete_ticket(ticket_id):
+        files = SupportTicketFiles.query.filter_by(ticket_id=ticket_id).all()
+        for file in files:
+            delete_file(file.id)
+        SupportTicketConversation.query.filter_by(ticket_id=ticket_id).delete()
+        db.session.commit()
+        SupportTickets.query.filter_by(id=ticket_id).delete()
+        db.session.commit()
+        return redirect(url_for("admin_ticket_management"))
 
 
 class SupportTickets(db.Model):
@@ -295,28 +294,28 @@ class SupportTicketConversation(db.Model):
     sender = db.Column(db.String(80), nullable=False)
     time_sent = db.Column(db.String(80), nullable=False)
     message = db.Column(db.Text)
-    files = db.Column(db.String(80))
 
-    def __init__(self, ticket_id, sender, time_sent, message, files):
+    def __init__(self, ticket_id, sender, time_sent, message):
         self.ticket_id = ticket_id
         self.sender = sender
         self.time_sent = time_sent
         self.message = message
-        self.files = files
 
 
 class SupportTicketFiles(db.Model):
     __mapper_args__ = {"polymorphic_identity": "support_ticket_files"}
     id = db.Column(db.Integer, primary_key=True)
     ticket_id = db.Column(db.Integer, db.ForeignKey('support_tickets.id'))
+    message_id = db.Column(db.Integer, db.ForeignKey('support_ticket_conversation.id'))
     sender = db.Column(db.String(80), nullable=False)
     time_sent = db.Column(db.String(80), nullable=False)
     path = db.Column(db.String(100), nullable=False)
     filename = db.Column(db.String(80), nullable=False)
     size = db.Column(db.String(80))
 
-    def __init__(self, ticket_id, sender, time_sent, path, filename, size):
+    def __init__(self, ticket_id, message_id, sender, time_sent, path, filename, size):
         self.ticket_id = ticket_id
+        self.message_id = message_id
         self.sender = sender
         self.time_sent = time_sent
         self.path = path

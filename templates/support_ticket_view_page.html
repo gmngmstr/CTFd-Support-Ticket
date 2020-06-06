@@ -22,15 +22,20 @@
 										{% for message_id in ticket_conversation %}
 											<div id="{{ message_id.id }}">
 												<span><b>{{ message_id.time }}-{{ message_id.sender }}</b></span><br>
-												<small>{{ message_id.message }}</small><br>
-												<details>
-													<summary>{{ message_id.files|length }} files uploaded</summary>
-													<ul>
-														{% for file in message_id.files %}
-															<li>{% for name in file %}<a href="{{ url_for('download_file', file_id=name) }}">{{ file[name] }}</a>{% endfor %}</li>
-														{% endfor %}
-													</ul>
-												</details>
+												{% if message_id.message %}
+													<small>{{ message_id.message }}</small><br>
+												{% endif %}
+												{% if message_id.files|length > 0 %}
+													<details>
+														<summary><small>{{ message_id.files|length }} files uploaded</small></summary>
+														<ul>
+															{% for file in message_id.files %}
+															<li><small>{% for name in file %}<a href="{{ url_for('download_file', file_id=name) }}">{{ file[name] }}</a>{% endfor %}</small></li>
+															{% endfor %}
+														</ul>
+													</details>
+												{% endif %}
+												<br>
 											</div>
 										{% endfor %}
 									</div>
@@ -104,6 +109,7 @@
 			document.getElementById("ticket-state").value = "{{ ticket_info.state }}";
 		{% endif %}
 	</script>
+	<script src="{{ request.script_root }}/support-ticket/static/support_ticket_view.js"></script>
 
 {% endblock %}
 

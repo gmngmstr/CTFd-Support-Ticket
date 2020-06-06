@@ -45,6 +45,12 @@
 											<b>Description:</b> {{ ticket_info.description }}
 										</label>
 									</div>
+
+									<div class="col-md-12">
+										<label>
+											<a href="{{ url_for('view_ticket', ticket_id=ticket_info.id) }}">Link to Conversation</a>
+										</label>
+									</div>
 								</div>
 							</div>
 							<div class="col-md-6">
