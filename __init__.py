@@ -2,8 +2,7 @@ import os
 from datetime import datetime
 from werkzeug import secure_filename
 
-from flask import session, json, Blueprint, request, redirect, Response, url_for, send_file, abort, render_template
-from flask import current_app as apps
+from flask import session, json, Blueprint, request, redirect, Response, url_for, send_file, abort, render_template, current_app
 from flask.helpers import safe_join
 from sqlalchemy.sql import and_
 
@@ -11,7 +10,8 @@ from CTFd.admin import admin
 from CTFd.views import views
 from CTFd.plugins import register_user_page_menu_bar
 from CTFd.plugins.flags import get_flag_class
-from CTFd.models import Challenges, db, Solves, Users, Files
+from CTFd.models import Challenges, db, Solves, Users
+from CTFd.schemas.notifications import NotificationSchema
 from CTFd.utils.modes import get_model
 from CTFd.utils.user import get_ip, get_current_user, get_current_team, is_admin, authed
 from CTFd.utils import scores
@@ -132,12 +132,50 @@ def load(app):
             os.mkdir(ticket_upload + str(ticket_id))
         time = datetime.now().time().strftime("%H:%M")
         for file in files:
-            filename = secure_filename(file.filename)
+            filename_temp = filename = secure_filename(file.filename)
+            '''if os.path.exists(ticket_upload + str(ticket_id) + '/' + filename_temp):
+                data = {
+                    "user_id": user.id,
+                    "title": "Upload Failed",
+                    "content": "The file that you just uploaded already exist please change the name and try again."
+                }
+                send_notification(data=data, type="alert")
+                return'''
+            exist = True
+            place = 0
+            while exist:
+                if os.path.exists(ticket_upload + str(ticket_id) + '/' + filename_temp):
+                    place += 1
+                    temp = filename.split('.')
+                    filename_temp = '{name}({place}).{ext}'.format(name=temp[0], place=place, ext=temp[1])
+                else:
+                    filename = filename_temp
+                    exist = False
             file.save(ticket_upload + str(ticket_id) + '/' + filename)
             size = os.stat((ticket_upload + str(ticket_id) + '/' + filename)).st_size
             uploaded_file = SupportTicketFiles(ticket_id=ticket_id, message_id=message_id, sender=user.name, time_sent=time, path=(ticket_upload + str(ticket_id) + '/' + filename), filename=filename, size=size)
             db.session.add(uploaded_file)
             db.session.commit()
+
+    def send_notification(data, type, sound=True):
+        data["sound"] = sound
+        data["type"] = type
+        schema = NotificationSchema()
+        result = schema.load(data)
+
+        if result.errors:
+            return {"success": False, "errors": result.errors}, 400
+
+        db.session.add(result.data)
+        db.session.commit()
+
+        response = schema.dump(result.data)
+
+        response.data["type"] = type
+        response.data["sound"] = sound
+        print(response.data)
+        current_app.events_manager.publish(data=response.data, type="notification")
+        print("Success")
 
     @app.route('/support-ticket', methods=['GET', 'POST'])
     @during_ctf_time_only
@@ -183,6 +221,11 @@ def load(app):
     @app.route('/support-ticket/view/<int:ticket_id>', methods=['GET', 'POST'])
     def view_ticket(ticket_id):
         if request.method == 'POST':
+            ticket = SupportTickets.query.filter_by(id=ticket_id)
+            for t in ticket:
+                if request.form['ticket-state'] != t.state:
+                    t.state = request.form['ticket-state']
+                    db.session.commit()
             message = request.form['message']
             time = datetime.now().time().strftime("%H:%M")
             user = get_current_user()
@@ -191,14 +234,16 @@ def load(app):
                 ticket_message = SupportTicketConversation(ticket_id=ticket_id, sender=user.name, time_sent=time, message=message)
                 db.session.add(ticket_message)
                 db.session.commit()
+                if user.type == "admin":
+                    data = {
+                        "user_id": ticket[0].user_id,
+                        "title": "New Message",
+                        "content": "You have a new message from the admins in one of your tickets."
+                    }
+                    send_notification(data=data, type="alert")
             if files[0]:
                 files = request.files.getlist('file')
                 upload_file(ticket_id, ticket_message.id, user, files)
-            ticket = SupportTickets.query.filter_by(id=ticket_id)
-            for t in ticket:
-                if request.form['ticket-state'] != t.state:
-                    t.state = request.form['ticket-state']
-                    db.session.commit()
             return redirect(url_for("view_ticket", ticket_id=ticket_id))
 
         ticket = SupportTickets.query.filter_by(id=ticket_id).first_or_404()
@@ -211,14 +256,15 @@ def load(app):
             file_list = []
             for file in message_files:
                 file_list.append({file.id: file.filename})
-            ticket_conversation.append({"id": message_info.id, "sender": get_user_access(message_info.sender), "time": message_info.time_sent, "message": message_info.message, "files": file_list})
+            if message_info.message != '' or len(file_list) > 0:
+                ticket_conversation.append({"id": message_info.id, "sender": get_user_access(message_info.sender), "time": message_info.time_sent, "message": message_info.message, "files": file_list})
         if is_admin():
             return render_template('support_ticket_view_page.html', ticket_info=ticket_info, ticket_conversation=ticket_conversation, ticket=ticket_id, access="Admin")
         else:
             return render_template('support_ticket_view_page.html', ticket_info=ticket_info, ticket_conversation=ticket_conversation, ticket=ticket_id, access="User")
 
-    @app.route('/support-ticket/download-file/<int:file_id>')
-    def download_file(file_id):
+    @app.route('/support-ticket/download-file/<int:file_id>/<string:filename>')
+    def download_file(file_id, filename):
         file = SupportTicketFiles.query.filter(and_(SupportTicketFiles.id == file_id)).first_or_404()
         return send_file(file.path, attachment_filename=file.filename)
 
@@ -226,7 +272,8 @@ def load(app):
     def delete_file(file_id):
         file = SupportTicketFiles.query.filter_by(id=file_id)
         ticket_id = file[0].ticket_id
-        os.remove(file[0].path)
+        if os.path.exists(file[0].path):
+            os.remove(file[0].path)
         file.delete()
         db.session.commit()
         return redirect(url_for("ticket_management", ticket_id=ticket_id))
@@ -277,7 +324,7 @@ class SupportTickets(db.Model):
     challenge_cat = db.Column(db.String(80))
     challenge_name = db.Column(db.String(80))
     description = db.Column(db.Text)
-    state = db.Column(db.String(80), nullable=False, default="Pending")
+    state = db.Column(db.String(80), nullable=False, default="Submitted")
 
     def __init__(self, user, user_id, challenge_cat, challenge_name, description):
         self.user = user

@@ -24,7 +24,7 @@
 										</label>
 									</div>
 									<div class="col-md-6">
-										<label {% if "Pending" in ticket_info.state %} style="background:orange; color:white" {% elif "Open" in ticket_info.state %} style="background:green; color:white" {% elif "Closed" in ticket_info.state %} style="background:red; color:white" {% endif %}>
+										<label {% if "Submitted" in ticket_info.state %} style="background:orange; color:white" {% elif "In Progress" in ticket_info.state %} style="background:green; color:white" {% elif "Closed" in ticket_info.state %} style="background:red; color:white" {% endif %}>
 											{{ ticket_info.state }}
 										</label>
 									</div>
@@ -88,7 +88,7 @@
 												</td>
 												<td class="text-center" width="10px">
 													<span data-toggle="tooltip" data-placement="top" title="Download File">
-														<a href="{{ url_for('download_file', file_id=file_info.id) }}"><i class="btn-fa fas fa-download"></i></a>
+														<a href="{{ url_for('download_file', file_id=file_info.id, filename=file_info.filename) }}"><i class="btn-fa fas fa-download"></i></a>
 													</span>
 													<span data-toggle="tooltip" data-placement="top" title="Delete File">
 														<a href="{{ url_for('delete_file', file_id=file_info.id) }}"><i class="btn-fa fas fa-times"></i></a>

@@ -30,7 +30,7 @@
 														<summary><small>{{ message_id.files|length }} files uploaded</small></summary>
 														<ul>
 															{% for file in message_id.files %}
-															<li><small>{% for name in file %}<a href="{{ url_for('download_file', file_id=name) }}">{{ file[name] }}</a>{% endfor %}</small></li>
+															<li><small>{% for name in file %}<a href="{{ url_for('download_file', file_id=name, filename=file[name]) }}">{{ file[name] }}</a>{% endfor %}</small></li>
 															{% endfor %}
 														</ul>
 													</details>
@@ -57,23 +57,23 @@
 									<div class="form-group">
 										<label for="ticket-state" class="control-label">Change Ticket State</label>
 										<select class="form-control custom-select" id="ticket-state" name="ticket-state">
-											<option>Pending</option>
-											<option>Open</option>
+											<option>Submitted</option>
+											<option>In Progress</option>
 											<option>Closed</option>
 										</select>
 									</div>
 								{% endif %}
-								{% if "User" in access and "Pending" not in ticket_info.state %}
+								{% if "User" in access and "Submitted" not in ticket_info.state %}
 									<div class="form-group">
 										<label for="ticket-state" class="control-label">Change Ticket State</label>
 										<select class="form-control custom-select" id="ticket-state" name="ticket-state">
-											<option>Open</option>
+											<option>In Progress</option>
 											<option>Closed</option>
 										</select>
 									</div>
 								{% endif %}
-								{% if "User" in access and "Pending" in ticket_info.state %}
-									<input name='ticket-state' type='hidden' value="Pending">
+								{% if "User" in access and "Submitted" in ticket_info.state %}
+									<input name='ticket-state' type='hidden' value="Submitted">
 								{% endif %}
 								<input id="nonce" name='nonce' type='hidden' value="{{ nonce }}">
 							</form>
@@ -105,7 +105,7 @@
 			{% endfor %}
 		};
 		var ticket_info = {"category":"{{ ticket_info.category }}", "challenge":"{{ ticket_info.challenge }}", "description":"{{ ticket_info.description }}", "state":"{{ ticket_info.state }}"};
-		{% if "Admin" in access or "Pending" not in ticket_info.state %}
+		{% if "Admin" in access or "Submitted" not in ticket_info.state %}
 			document.getElementById("ticket-state").value = "{{ ticket_info.state }}";
 		{% endif %}
 	</script>

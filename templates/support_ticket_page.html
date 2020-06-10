@@ -46,19 +46,19 @@
 	{% if admin or not errors %}
 		<div class="container">
 			<div id='ticket-board'>
-				<div id="Pending-board" style="display:none">
+				<div id="Submitted-board" style="display:none">
 					<div class="category-header col-md-12 mb-3">
-						<h3>Pending</h3>
+						<h3>Submitted</h3>
 					</div>
-					<div id="Pending-tickets" class="category-challenges col-md-12">
+					<div id="Submitted-tickets" class="category-challenges col-md-12">
 						{% for ticket in ticket_list %}
-							{% if "Pending" in ticket.state %}
+							{% if "Submitted" in ticket.state %}
 								<div class="col-md-3 d-inline-block">
 									<button class="btn btn-dark challenge-button w-100 text-truncate pt-3 pb-3 mb-2" onclick="location.href='{{ url_for('view_ticket', ticket_id=ticket.id) }}'" type="button">
 										{% if "Admin" in access %}
 											<p>Creator: {{ ticket.creator }}</p>
 										{% endif %}
-										<p>Category: {{ ticket_list.challenge_cat }}</p>
+										<p>Category: {{ ticket.challenge_cat }}</p>
 										<span>Challenge: {{ ticket.challenge_name }}</span>
 									</button>
 								</div>
@@ -66,19 +66,19 @@
 						{% endfor %}
 					</div>
 				</div>
-				<div id="Open-board" style="display:none">
+				<div id="In-Progress-board" style="display:none">
 					<div class="category-header col-md-12 mb-3">
-						<h3>Open</h3>
+						<h3>In Progress</h3>
 					</div>
-					<div id="Open-tickets" class="category-challenges col-md-12">
+					<div id="In-Progress-tickets" class="category-challenges col-md-12">
 						{% for ticket in ticket_list %}
-							{% if "Open" in ticket.state %}
+							{% if "In Progress" in ticket.state %}
 								<div class="col-md-3 d-inline-block">
 									<button class="btn btn-dark challenge-button w-100 text-truncate pt-3 pb-3 mb-2" onclick="location.href='{{ url_for('view_ticket', ticket_id=ticket.id) }}'" type="button">
 										{% if "Admin" in access %}
 											<p>Creator: {{ ticket.creator }}</p>
 										{% endif %}
-										<p>Category: {{ ticket_list.challenge_cat }}</p>
+										<p>Category: {{ ticket.challenge_cat }}</p>
 										<span>Challenge: {{ ticket.challenge_name }}</span>
 									</button>
 								</div>
@@ -98,7 +98,7 @@
 										{% if "Admin" in access %}
 											<p>Creator: {{ ticket.creator }}</p>
 										{% endif %}
-										<p>Category: {{ ticket_list.challenge_cat }}</p>
+										<p>Category: {{ ticket.challenge_cat }}</p>
 										<span>Challenge: {{ ticket.challenge_name }}</span>
 									</button>
 								</div>
