@@ -201,7 +201,7 @@ def load(app):
             db.session.add(ticket)
             db.session.commit()
             time = datetime.now().time().strftime("%H:%M")
-            initial_message = SupportTicketConversation(ticket_id=ticket.id, sender=user.name, time_sent=time, message=issue.replace('\n', '   '))
+            initial_message = SupportTicketConversation(ticket_id=ticket.id, sender=user.name, time_sent=time, message=issue.replace('\n', '<br>'))
             db.session.add(initial_message)
             db.session.commit()
             if files[0]:
@@ -238,7 +238,11 @@ def load(app):
                     t.state = request.form['ticket-state']
                     db.session.commit()
             if message.replace(' ', '').replace('\n', '') != "" or files[0]:
-                ticket_message = SupportTicketConversation(ticket_id=ticket_id, sender=user.name, time_sent=time, message=message.replace('\n', '   '))
+                temp = message.split('\n')
+                for t in temp:
+                    message += t
+                    print(message)
+                ticket_message = SupportTicketConversation(ticket_id=ticket_id, sender=user.name, time_sent=time, message=message)
                 db.session.add(ticket_message)
                 db.session.commit()
                 if user.type == "admin":

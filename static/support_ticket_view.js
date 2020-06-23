@@ -15,6 +15,12 @@ function start(){
         }
     };
 
+    document.getElementById("ticket-send-message").onkeydown=function(e) {
+        if (e.keyCode == 13) {
+            e.preventDefault();
+        }
+    };
+
     document.getElementById("submit-ticket").onclick=function() {
         if (document.getElementById("size-error-label").style.display === 'block') {
             return;
