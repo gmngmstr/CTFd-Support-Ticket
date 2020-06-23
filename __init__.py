@@ -201,7 +201,7 @@ def load(app):
             db.session.add(ticket)
             db.session.commit()
             time = datetime.now().time().strftime("%H:%M")
-            initial_message = SupportTicketConversation(ticket_id=ticket.id, sender=user.name, time_sent=time, message=issue)
+            initial_message = SupportTicketConversation(ticket_id=ticket.id, sender=user.name, time_sent=time, message=issue.replace('\n', '   '))
             db.session.add(initial_message)
             db.session.commit()
             if files[0]:
@@ -223,22 +223,28 @@ def load(app):
     def view_ticket(ticket_id):
         if request.method == 'POST':
             ticket = SupportTickets.query.filter_by(id=ticket_id)
-            for t in ticket:
-                if request.form['ticket-state'] != t.state:
-                    t.state = request.form['ticket-state']
-                    db.session.commit()
             message = request.form['message']
             time = datetime.now().time().strftime("%H:%M")
             user = get_current_user()
             files = request.files.getlist('file')
+            for t in ticket:
+                if request.form['ticket-state'] != t.state:
+                    data = {
+                        "user_id": ticket[0].user_id,
+                        "title": "Ticket Status Change",
+                        "content": "The admins have changed your tickets status to {0}.".format(request.form['ticket-state']) if user.type == "admin" else "A ticket has been changed to {0} by the user.".format(request.form['ticket-state'])
+                    }
+                    send_notification(data=data, type="alert")
+                    t.state = request.form['ticket-state']
+                    db.session.commit()
             if message.replace(' ', '').replace('\n', '') != "" or files[0]:
-                ticket_message = SupportTicketConversation(ticket_id=ticket_id, sender=user.name, time_sent=time, message=message)
+                ticket_message = SupportTicketConversation(ticket_id=ticket_id, sender=user.name, time_sent=time, message=message.replace('\n', '   '))
                 db.session.add(ticket_message)
                 db.session.commit()
                 if user.type == "admin":
                     data = {
                         "user_id": ticket[0].user_id,
-                        "title": "New Message",
+                        "title": "New Ticket Message",
                         "content": "You have a new message from the admins in one of your tickets."
                     }
                     send_notification(data=data, type="alert")

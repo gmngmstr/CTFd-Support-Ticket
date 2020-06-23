@@ -73,7 +73,7 @@
 									</div>
 								{% endif %}
 								{% if "User" in access and "Submitted" in ticket_info.state %}
-									<input name='ticket-state' type='hidden' value="Submitted">
+									<input id="ticket-state" name='ticket-state' type='hidden' value="Submitted">
 								{% endif %}
 								<input id="nonce" name='nonce' type='hidden' value="{{ nonce }}">
 							</form>
@@ -105,9 +105,7 @@
 			{% endfor %}
 		};
 		var ticket_info = {"category":"{{ ticket_info.category }}", "challenge":"{{ ticket_info.challenge }}", "description":"{{ ticket_info.description }}", "state":"{{ ticket_info.state }}"};
-		{% if "Admin" in access or "Submitted" not in ticket_info.state %}
-			document.getElementById("ticket-state").value = "{{ ticket_info.state }}";
-		{% endif %}
+		document.getElementById("ticket-state").value = "{{ ticket_info.state }}";
 	</script>
 	<script src="{{ request.script_root }}/support-ticket/static/support_ticket_view.js"></script>
 
