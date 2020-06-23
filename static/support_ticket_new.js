@@ -78,6 +78,12 @@ function start(){
         }
     };
 
+    document.getElementById("create-ticket-name-issue").onkeydown=function(e) {
+        if (e.keyCode == 13) {
+            e.preventDefault();
+        }
+    };
+
     document.getElementById("submit-ticket").onclick=function() {
         if (document.getElementById("create-ticket-select-challenge").value === "--") {
             document.getElementById("create-ticket-select-challenge-error").style.display = 'block';
