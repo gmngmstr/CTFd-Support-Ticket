@@ -8,7 +8,7 @@ from sqlalchemy.sql import and_
 
 from CTFd.admin import admin
 from CTFd.views import views
-from CTFd.plugins import register_user_page_menu_bar
+from CTFd.plugins import register_user_page_menu_bar, register_plugin_assets_directory
 from CTFd.plugins.flags import get_flag_class
 from CTFd.models import Challenges, db, Solves, Users
 from CTFd.schemas.notifications import NotificationSchema
@@ -34,6 +34,7 @@ def load(app):
     app.register_blueprint(support_ticket_static, url_prefix='/support-ticket')
 
     register_user_page_menu_bar('Support Ticket', 'support-ticket')
+    # register_plugin_assets_directory(app, base_path="/plugins/CTFd_Support_Ticket/static/")
 
     if not os.path.exists(app.config['UPLOAD_FOLDER'] + '/support_ticket'):
         os.mkdir(app.config['UPLOAD_FOLDER'] + '/support_ticket')
